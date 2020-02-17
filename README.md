@@ -17,17 +17,17 @@ Running it will print per word the list of offsets (line & char).
 - if you want to change the defaults, edit main_test.py
 
 ## Assumptions
-1. A word is of the structure [A-Za-z0-9_]+ (this is the case in the example, if this changes, it may require a more advanced parser)
-2. matching will be done on a lowercase of a full word as defined in #2 this means:
+1. A token is of the regexp [A-Za-z0-9_]+ (this is the case in the example, if this changes, it may require a more advanced parser)
+2. matching will be done by the lowercase of a full token as defined in #1 this means:
 - David matches david, DaVid but does not make a match with David1 DavidJohn David_
 - David will be matched in lines containing David?John, David-John
-- Reasoning: in the sample file I already saw that names are lowercase, Capitalized or UPPERCASE. In order to also cover case typos would make sense to use this method.
-3. Runs on one machine but the file-size is not limited. it is assumed that the result can fit in memory.1
+- *Reasoning*: in the sample file I already saw that names are lowercase, Capitalized or UPPERCASE. In order to also cover case typos would make sense to use this method.
+3. Runs on one machine but the file-size is not limited. it is assumed that the result can fit in memory.
 4. No need to print words that did not appear in the file.
 
 ## Some Implementation details
 Overall there are 3 main modules: Manager, Matcher and Aggregator, plus data modules for the word and chunk matching data
-- The manager is responsible for chunking the file, putting them in a queue for the matching workers and waiting if the queue is full (currently limiting to 50 waiting chunks)
+- The manager is responsible for chunking the file, putting them in a queue for the matching workers and waiting if the queue is full (currently limiting all waiting chunks to no more than 1GB)
 - The Matcher runs with a designated number of workers (defaults to 10) that are getting their chunks in a Queue. They will calculate all matches in the chunk level and pass to the aggregator.
 - The matcher is using the ntlk regexp parser using the above assumptions for word tokenizing. it is important to avoid "finding" names that are part of a bigger word.
 - The Aggregator is also waiting on a Queue and will aggregate all the matching data into one list.
