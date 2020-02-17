@@ -1,4 +1,4 @@
-from .src.matches_data import ChunkMatches, WordMatch
-from .src.aggregator import Aggregator
-from .src.matcher import Matcher
-from .src.big_file_manager import BigFileManager
+from .matches_data import ChunkMatches, WordMatch
+from .aggregator import Aggregator
+from .matcher import Matcher
+from .big_file_manager import BigFileManager
