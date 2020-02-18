@@ -10,8 +10,9 @@ if __name__ == '__main__':
                  'Frank', 'Scott', 'Eric', 'Stephen', 'Andrew', 'Raymond', 'Gregory', 'Joshua', 'Jerry', 'Dennis',
                  'Walter', 'Patrick', 'Peter', 'Harold', 'Douglas', 'Henry', 'Carl', 'Arthur', 'Ryan', 'Roger']
 
-        for file in ['small1.txt', 'small2.txt', 'big.txt', 'big10.txt', ]:
+        for file in ['small1.txt', 'small2.txt', 'big.txt', 'big101.txt', ]:
             filename='files/'+file
+            print ('Verifying file ', filename)
             bfm = BigFileManager(names, filename, chunksize)
             start = dt.now()
             bfm.run()
@@ -19,7 +20,8 @@ if __name__ == '__main__':
             # verify agains the whole the file
             f = open(filename, 'rt')
             chunk = f.read()
-            bfm.aggregator.verify(chunk)
+            bfm.aggregator.verify_offsets(chunk)
+            bfm.aggregator.verify_counts(chunk, names)
 
     main()
     print('Done')

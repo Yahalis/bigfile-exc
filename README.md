@@ -21,9 +21,10 @@ Running it will print per word the list of offsets (line & char).
 2. matching will be done by the lowercase of a full token as defined in #1 this means:
 - David matches david, DaVid but does not make a match with David1 DavidJohn David_
 - David will be matched in lines containing David?John, David-John
-- *Reasoning*: in the sample file I already saw that names are lowercase, Capitalized or UPPERCASE. In order to also cover case typos would make sense to use this method.
+- *Reasoning*: in the sample file I already saw that names are lowercase, Capitalized or UPPERCASE. In order to also cover case typos would make sense to use this method. need to be revisited as it seems that in the sample we have at the end some aggregative data (and some code) that I do not fully understand and contains lots of names in lowercase. but - better be safe than sorry...
 3. Runs on one machine but the file-size is not limited. it is assumed that the result can fit in memory.
 4. No need to print words that did not appear in the file.
+5. Line size is in average smaller then the chunk size. A huge file with one line will require modifications.
 
 ## Some Implementation details
 Overall there are 3 main modules: Manager, Matcher and Aggregator, plus data modules for the word and chunk matching data
@@ -34,3 +35,6 @@ Overall there are 3 main modules: Manager, Matcher and Aggregator, plus data mod
 - The aggregator calculates internally the line offsets per chunk and appends to the output when printing
 - Synchronizing the exit of the workers and printing through the queues
 - All classes are encapsulated and communicate through function calls (sometimes with queues inside for asynch)
+
+### Comments
+- Testing with the standard NLTK parser for english finds less tokens since it deals differently in-string names and tokens like David's, the current method also count these cases, so seems it's covering enough ground.

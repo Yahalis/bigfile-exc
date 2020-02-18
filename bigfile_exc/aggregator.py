@@ -1,5 +1,8 @@
 import queue
 import threading
+from collections import Counter
+
+import nltk
 
 from bigfile_exc import ChunkMatches
 
@@ -35,18 +38,27 @@ class Aggregator:
         get chunk-matches from the quueue and call aggregate.
         When done - signal the ternminate queue
         """
-        nChunks = 0
-        for kwargs in iter(self.__aggQueue.get, self.__sentinel):
-            self.aggregate(**kwargs)
-            nChunks += 1
+        # make sure that we terminate the worker thread gracefully even if an error occures.
+        try:
+            nChunks = 0
+            for kwargs in iter(self.__aggQueue.get, self.__sentinel):
+                self.aggregate(**kwargs)
+                nChunks += 1
 
-        # Calculating the line offset per chunk from the line counters.
-        nLines = 0
-        for i in range(1, nChunks + 1):
-            self.__lineOffsets[i] = nLines
-            nLines += self.__lineCounters[i] - 1
-
-        self.__terminateQueue.put(self.__sentinel)
+            # Calculating the line offset per chunk from the line counters.
+            nLines = 0
+            for i in range(1, nChunks + 1):
+                if i in self.__lineCounters:
+                    self.__lineOffsets[i] = nLines
+                    nLines += self.__lineCounters[i] - 1
+                else:
+                    print("Error in aggregator, missing data on chunk {}".format(i))
+                    # break
+        except Exception as e:
+            print("An error occured in aggregator".format(id))
+            raise e
+        finally:
+            self.__terminateQueue.put(self.__sentinel)
 
     def terminate(self) -> None:
         """
@@ -79,9 +91,10 @@ class Aggregator:
         :return:
         """
         if len(self.__lineCounters) != len(self.__lineOffsets):
-            return "Aggregation is still in progress"
+            return "Aggregation is still in progress or an error occured and some chunks are missing"
         # generating the string taking the line-offsets into account.
         ret = ''
+        # print('Num words: {}, {}'.format(len(self.__chunkMatches.wordMatches), self.__chunkMatches.wordMatches.keys()))
         for word, matchList in self.__chunkMatches.wordMatches.items():
             ret += word + ' -> ['
             for wm in matchList:
@@ -93,8 +106,8 @@ class Aggregator:
         print(self)
 
     ####################################################
-    # test function
-    def verify(self, chunk: str):
+    # test functions
+    def verify_offsets(self, chunk: str):
         """
         This function enables to load in the chunk of the file processed earlier and verify that all words are
         indeed in the correct place
@@ -112,4 +125,25 @@ class Aggregator:
                     print(chunk[wm.offset:wm.offset + wl], word, wm.offset)
                     errcount += 1
         print('Verification: num words: {}, num errors: {}'.format(count, errcount))
+        return
+
+    def verify_counts(self, chunk: str, names:set):
+        """
+
+        :param chunk:
+        :param names:
+        :return:
+        """
+        cm = self.__chunkMatches
+        count = 0
+        errcount = 0
+        wordlist=nltk.word_tokenize(chunk)
+        wordsdict=Counter()
+        for word in wordlist:
+            wordsdict[word]+=1
+        for name in names:
+            wc = len(cm.wordMatches[name])
+            wc1= wordsdict[name]
+            if wc!=wc1:
+                print('Verificationerror for {} Agg words: {}, nltk words: {}'.format(name, wc, wc1))
         return

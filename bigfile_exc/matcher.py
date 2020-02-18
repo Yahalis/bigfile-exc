@@ -42,17 +42,22 @@ class Matcher:
         :param id: worker id (FFU)
         :return:
         """
-        for aggData in iter(self.__matchQueue.get, self.__sentinel):
-            kwargs = aggData
-            self.do_match(**kwargs)
+        # make sure that we terminate the worker thread gracefully even if an error occures.
+        try:
+            for aggData in iter(self.__matchQueue.get, self.__sentinel):
+                kwargs = aggData
+                self.do_match(**kwargs)
+        except Exception as e:
+            print("an error occured in matching worker {}".format(id))
+            raise e
+        finally:
+            # marking myself as finished
+            with self.__counterLock:
+                self.__doneWorkers+=1
 
-        # marking myself as finished
-        with self.__counterLock:
-            self.__doneWorkers+=1
-
-        # terminating aggregator if I'm last.
-        if self.__doneWorkers==self.__numWorkers:
-            self.__aggregator.terminate()
+            # terminating aggregator if I'm last.
+            if self.__doneWorkers==self.__numWorkers:
+                self.__aggregator.terminate()
 
     def terminate(self) -> None:
         """
@@ -77,6 +82,7 @@ class Matcher:
         :param offset: offset of the chunk in the file.
         :return:
         """
+        # if chunkId==5: a=b # activate line code to mimic a crash in one of the workers
         nLines = 1
         chunkMatches = ChunkMatches(offset)
         tokens = nltk.regexp_span_tokenize(chunk, regexp='[^A-Za-z0-9_\n]')
