@@ -80,6 +80,7 @@ class Aggregator:
         :param chunkMatches:
         :return:
         """
+        # if chunkId==5: a=b # activate line code to mimic a crash the aggregator (test)
         assert chunkId not in self.__lineCounters, "can't aggregate the same chunk twice."
         matches = self.__chunkMatches
         self.__lineCounters[chunkId] = chunkMatches.lineCount

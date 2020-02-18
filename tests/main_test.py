@@ -3,7 +3,7 @@ from bigfile_exc import BigFileManager
 
 if __name__ == '__main__':
     def main():
-        chunksize = 80000
+        chunksize = 800000
         filename='files/big.txt'
         names = ['James', 'John', 'Robert', 'Michael', 'William', 'David', 'Richard', 'Charles', 'Joseph', 'Thomas',
                  'Christopher', 'Daniel', 'Paul', 'Mark', 'Donald', 'George', 'Kenneth', 'Steven', 'Edward', 'Brian',
